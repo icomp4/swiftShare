@@ -10,7 +10,7 @@ type User struct {
 	PfpUrl    string
 	Files     []File
 	CreatedAt time.Time
-	DeletedAt time.Time
+	UpdatedAt time.Time
 }
 type File struct {
 	ID        uint
@@ -19,5 +19,5 @@ type File struct {
 	Path      string
 	Link      string
 	CreatedAt time.Time
-	DeletedAt time.Time
+	UpdatedAt time.Time
 }

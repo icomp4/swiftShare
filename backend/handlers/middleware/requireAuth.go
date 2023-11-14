@@ -12,7 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 type contextKey string
-const userKey contextKey = "user"
+const UserKey contextKey = "user"
 
 func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +21,6 @@ func RequireAuth(next http.Handler) http.Handler {
 			http.Error(w, "Could not get token information.", http.StatusUnauthorized)
 			return
 		}
-
 		token, err := jwt.Parse(tokenCookie.Value, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -33,12 +32,10 @@ func RequireAuth(next http.Handler) http.Handler {
 			http.Error(w, "Error parsing JWT.", http.StatusUnauthorized)
 			return
 		}
-
 		if !token.Valid {
 			http.Error(w, "Invalid JWT.", http.StatusUnauthorized)
 			return
 		}
-
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok || float64(time.Now().Unix()) > claims["exp"].(float64) {
 			http.Error(w, "Expired JWT.", http.StatusUnauthorized)
@@ -55,7 +52,7 @@ func RequireAuth(next http.Handler) http.Handler {
 			log.Println(err)
 			return
 		}
-		ctx := context.WithValue(r.Context(), userKey, user)
+		ctx := context.WithValue(r.Context(), UserKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

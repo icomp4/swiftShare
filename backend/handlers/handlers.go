@@ -2,14 +2,17 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"swiftShare/backend/controllers"
 	"swiftShare/backend/handlers/messages"
+	"swiftShare/backend/handlers/middleware"
 	"swiftShare/backend/handlers/validators"
 	"swiftShare/backend/models"
 	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -49,6 +52,8 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 }
 func SignIn(w http.ResponseWriter, r *http.Request) {
 	var user models.User
+	var userID int
+	var err error
 	if r.Method != "POST" {
 		WriteError(w, http.StatusMethodNotAllowed, "Method must be POST")
 		return
@@ -57,12 +62,13 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, http.StatusBadRequest, "Failed to decode request body")
 		return
 	}
-	if err := controllers.SignIn(user); err != nil {
+	if userID, err = controllers.SignIn(user); err != nil {
 		WriteError(w, http.StatusBadRequest, "Incorrect login information")
 		return
 	}
+	user.ID = uint(userID)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID,
+		"sub": fmt.Sprint(userID),
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
 	})
 	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
@@ -86,24 +92,48 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(json)
 }
-func LogOut(w http.ResponseWriter, r *http.Request){
+func LogOut(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed.", http.StatusMethodNotAllowed)
 		return
 	}
 	http.SetCookie(w, &http.Cookie{
-		Name:    "jwt",
-		Value:   "",
-		Expires: time.Now().AddDate(0, 0, -1),
-		Path:    "/",
+		Name:     "jwt",
+		Value:    "",
+		Expires:  time.Now().AddDate(0, 0, -1),
+		Path:     "/",
 		HttpOnly: true,
 	})
 	w.WriteHeader(http.StatusOK)
-	io.WriteString(w,"You have successfully logged out")
+	io.WriteString(w, "You have successfully logged out")
 }
-func Validate(w http.ResponseWriter, r *http.Request){
-	io.WriteString(w, "You are authorized!")
+func DeleteAccount(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "DELETE" {
+		http.Error(w, "Method not allowed.", http.StatusMethodNotAllowed)
+		return
+	}
+	user, ok := r.Context().Value(middleware.UserKey).(models.User)
+	if !ok {
+		http.Error(w, "Context does not include user information.", http.StatusInternalServerError)
+		return
+	}
+	userid := fmt.Sprint(user.ID)
+	if err := controllers.DeleteAccount(userid); err != nil {
+		http.Error(w, "Could not delete account", http.StatusInternalServerError)
+		return
+	}
+	fmt.Println("UserID: ",userid)
+	http.SetCookie(w, &http.Cookie{
+		Name:     "jwt",
+		Value:    "",
+		Expires:  time.Now().AddDate(0, 0, -1),
+		Path:     "/",
+		HttpOnly: true,
+	})
+	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, "You have successfully deleted your account and will now be logged out.")
 }
+
 func WriteError(w http.ResponseWriter, httpStatus int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(httpStatus)

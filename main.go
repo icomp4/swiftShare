@@ -20,7 +20,7 @@ func main() {
 	mux.Handle("/signup", middleware.Logger(http.HandlerFunc(handlers.SignUp)))
 	mux.Handle("/login", middleware.Logger(http.HandlerFunc(handlers.SignIn)))
 	mux.Handle("/logout", middleware.Logger(http.HandlerFunc(handlers.LogOut)))
-	mux.Handle("/validate", middleware.RequireAuth(http.HandlerFunc(handlers.Validate)))
+	mux.Handle("/delete", middleware.RequireAuth(http.HandlerFunc(handlers.DeleteAccount)))
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal(err)
 	}

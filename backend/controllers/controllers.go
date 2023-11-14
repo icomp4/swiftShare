@@ -25,7 +25,7 @@ func SignUp(user models.User) error {
 	}
 	return nil
 }
-func SignIn(user models.User) error {
+func SignIn(user models.User) (int, error){
 	query := "SELECT * FROM users WHERE username = $1"
 	rows, err := database.DB.Query(query, user.Username)
 	if err != nil {
@@ -47,9 +47,9 @@ func SignIn(user models.User) error {
 	defer rows.Close()
 	err2 := bcrypt.CompareHashAndPassword([]byte(password), []byte(user.Password))
 	if err2 != nil {
-		return err2
+		return -1,err2
 	}
-	return nil
+	return id,nil
 }
 func DeleteAccount(userID string) error{
 	deleteAcc := `DELETE FROM users WHERE id = $1`
@@ -71,9 +71,9 @@ func FindByID(userID string) (models.User, error) {
 	var password string
 	var pfpurl string
 	var createdAt time.Time
-	var deletedAt time.Time
+	var updatedAt time.Time
 	for rows.Next() {
-		err := rows.Scan(&id, &username, &email, &password, &pfpurl, &createdAt, &deletedAt)
+		err := rows.Scan(&id, &username, &email, &password, &pfpurl, &createdAt, &updatedAt)
 		if err != nil {
 			log.Println(err)
 			return models.User{}, err
@@ -87,7 +87,7 @@ func FindByID(userID string) (models.User, error) {
 		Password: password,
 		PfpUrl: pfpurl,
 		CreatedAt: createdAt,
-		DeletedAt: deletedAt,
+		UpdatedAt: updatedAt,
 	}
 	return user, nil
 }
