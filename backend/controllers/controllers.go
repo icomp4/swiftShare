@@ -51,6 +51,14 @@ func SignIn(user models.User) error {
 	}
 	return nil
 }
+func DeleteAccount(userID string) error{
+	deleteAcc := `DELETE FROM users WHERE id = $1`
+	if _, err := database.DB.Exec(deleteAcc, userID); err != nil {
+		log.Print(err)
+		return err
+	}
+	return nil
+}
 func FindByID(userID string) (models.User, error) {
 	findUser := "SELECT * FROM users WHERE id = $1"
 	rows, err := database.DB.Query(findUser, userID)
