@@ -11,10 +11,12 @@ import (
 	"swiftShare/backend/handlers/middleware"
 	"swiftShare/backend/handlers/validators"
 	"swiftShare/backend/models"
+	"swiftShare/backend/utils"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
+var AuthCodeStore = make(map[string]utils.AuthCode)
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	var user models.User
@@ -55,15 +57,15 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	var userID int
 	var err error
 	if r.Method != "POST" {
-		WriteError(w, http.StatusMethodNotAllowed, "Method must be POST")
+		http.Error(w, "Method must be POST", http.StatusMethodNotAllowed)
 		return
 	}
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		WriteError(w, http.StatusBadRequest, "Failed to decode request body")
+		http.Error(w, "Failed to decode request body",http.StatusBadRequest)
 		return
 	}
 	if userID, err = controllers.SignIn(user); err != nil {
-		WriteError(w, http.StatusBadRequest, "Incorrect login information")
+		http.Error(w, "Incorrect login information", http.StatusBadRequest)
 		return
 	}
 	user.ID = uint(userID)
@@ -73,7 +75,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 	})
 	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 	if err != nil {
-		WriteError(w, http.StatusBadGateway, "Failed to created token")
+		http.Error(w, "Failed to created token", http.StatusBadGateway)
 		return
 	}
 	http.SetCookie(w, &http.Cookie{
@@ -133,14 +135,57 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "You have successfully deleted your account and will now be logged out.")
 }
-
-func WriteError(w http.ResponseWriter, httpStatus int, message string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(httpStatus)
-	resp := messages.BasicFailMessage{
-		Status:  "Failed",
-		Message: message,
+func RequestEmail(w http.ResponseWriter, r *http.Request){
+	var AuthCode utils.AuthCode
+	var err error
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed.", http.StatusMethodNotAllowed)
+		return
 	}
-	json, _ := json.Marshal(resp)
-	w.Write(json)
+	user, ok := r.Context().Value(middleware.UserKey).(models.User)
+	if !ok {
+		http.Error(w, "Context does not include user information.", http.StatusInternalServerError)
+		return
+	}
+	userid := fmt.Sprint(user.ID)
+	if AuthCode, err = utils.SendConformationLink(userid, user.Email); err != nil{
+		http.Error(w, "Could not send conformation email.", http.StatusInternalServerError)
+		return
+	}
+	AuthCodeStore[userid] = AuthCode
+	fmt.Println("Authentication code stored:", AuthCode)
+	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, "Please check email for conformation code.")
+}
+func UpatePassword(w http.ResponseWriter, r *http.Request){
+	var userInfo utils.UpdatePasswordStruct
+	if r.Method != "PATCH" {
+		http.Error(w, "Method not allowed.", http.StatusMethodNotAllowed)
+		return
+	}
+	if err := json.NewDecoder(r.Body).Decode(&userInfo); err != nil {
+		http.Error(w, "Failed to decode request body",http.StatusBadRequest)
+		return
+	}
+	user, ok := r.Context().Value(middleware.UserKey).(models.User)
+	if !ok {
+		http.Error(w, "Context does not include user information.", http.StatusInternalServerError)
+		return
+	}
+	userid := fmt.Sprint(user.ID)
+	authCode, ok := AuthCodeStore[userid]
+	if !ok{
+		http.Error(w, "Could not get authentication code, try generating a new one.", http.StatusInternalServerError)
+		return
+	}
+	if err := utils.VerifyEmailCode(userInfo.Code, userid, &authCode); !err {
+		http.Error(w, "Error verifying auth code.", http.StatusBadRequest)
+		return
+	}
+	if err := controllers.UpatePassword(userid, userInfo.NewPassword); err != nil{
+		http.Error(w, "Error updating password", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, "You have successfully updated your password")
 }

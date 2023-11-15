@@ -16,11 +16,23 @@ func main() {
 	if err := database.DB.Ping(); err != nil {
 		log.Fatal(err)
 	}
+
 	mux := http.NewServeMux()
-	mux.Handle("/signup", middleware.Logger(http.HandlerFunc(handlers.SignUp)))
-	mux.Handle("/login", middleware.Logger(http.HandlerFunc(handlers.SignIn)))
-	mux.Handle("/logout", middleware.Logger(http.HandlerFunc(handlers.LogOut)))
-	mux.Handle("/delete", middleware.RequireAuth(http.HandlerFunc(handlers.DeleteAccount)))
+	signupHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.SignUp)))
+	loginHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.SignIn)))
+	logoutHandler := middleware.Logger(http.HandlerFunc(handlers.LogOut))
+	deleteHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.DeleteAccount)))
+	requestEmailHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.RequestEmail)))
+	updatePassswordHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.UpatePassword)))
+
+	
+	mux.Handle("/signup", signupHandler)
+	mux.Handle("/login", loginHandler)
+	mux.Handle("/logout", logoutHandler)
+	mux.Handle("/delete", deleteHandler)
+	mux.Handle("/request", requestEmailHandler)
+	mux.Handle("/update/password", updatePassswordHandler)
+	
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal(err)
 	}

@@ -25,7 +25,7 @@ func SignUp(user models.User) error {
 	}
 	return nil
 }
-func SignIn(user models.User) (int, error){
+func SignIn(user models.User) (int, error) {
 	query := "SELECT * FROM users WHERE username = $1"
 	rows, err := database.DB.Query(query, user.Username)
 	if err != nil {
@@ -47,13 +47,26 @@ func SignIn(user models.User) (int, error){
 	defer rows.Close()
 	err2 := bcrypt.CompareHashAndPassword([]byte(password), []byte(user.Password))
 	if err2 != nil {
-		return -1,err2
+		return -1, err2
 	}
-	return id,nil
+	return id, nil
 }
-func DeleteAccount(userID string) error{
+func DeleteAccount(userID string) error {
 	deleteAcc := `DELETE FROM users WHERE id = $1`
 	if _, err := database.DB.Exec(deleteAcc, userID); err != nil {
+		log.Print(err)
+		return err
+	}
+	return nil
+}
+func UpatePassword(userID string, newPassword string) error {
+	password, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	deleteAcc := `UPDATE users SET password = $1 WHERE id = $2`
+	if _, err := database.DB.Exec(deleteAcc, string(password), userID); err != nil {
 		log.Print(err)
 		return err
 	}
@@ -81,11 +94,11 @@ func FindByID(userID string) (models.User, error) {
 	}
 	defer rows.Close()
 	user := models.User{
-		ID: uint(id),
-		Username: userID,
-		Email: email,
-		Password: password,
-		PfpUrl: pfpurl,
+		ID:        uint(id),
+		Username:  userID,
+		Email:     email,
+		Password:  password,
+		PfpUrl:    pfpurl,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
 	}
