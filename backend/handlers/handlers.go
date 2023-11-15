@@ -177,7 +177,7 @@ func UpatePassword(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Could not get authentication code, try generating a new one.", http.StatusInternalServerError)
 		return
 	}
-	if err := utils.VerifyEmailCode(userInfo.NewInfo, userid, &authCode); !err {
+	if err := utils.VerifyEmailCode(userInfo.Code, userid, &authCode); !err{
 		http.Error(w, "Error verifying auth code.", http.StatusBadRequest)
 		return
 	}

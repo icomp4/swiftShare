@@ -17,7 +17,7 @@ type AuthCode struct {
 }
 
 type UpdatePasswordStruct struct{
-	NewInfo string
+	Code string
 	NewPassword string
 }
 func SendConformationLink(userID string, userEmail string) (AuthCode, error) {
