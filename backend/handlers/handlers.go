@@ -153,7 +153,6 @@ func RequestEmail(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	AuthCodeStore[userid] = AuthCode
-	fmt.Println("Authentication code stored:", AuthCode)
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "Please check email for conformation code.")
 }
@@ -178,12 +177,35 @@ func UpatePassword(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Could not get authentication code, try generating a new one.", http.StatusInternalServerError)
 		return
 	}
-	if err := utils.VerifyEmailCode(userInfo.Code, userid, &authCode); !err {
+	if err := utils.VerifyEmailCode(userInfo.NewInfo, userid, &authCode); !err {
 		http.Error(w, "Error verifying auth code.", http.StatusBadRequest)
 		return
 	}
 	if err := controllers.UpatePassword(userid, userInfo.NewPassword); err != nil{
 		http.Error(w, "Error updating password", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, "You have successfully updated your password")
+}
+func UpatePfp(w http.ResponseWriter, r *http.Request){
+	var url map[string]string
+	if r.Method != "PATCH" {
+		http.Error(w, "Method not allowed.", http.StatusMethodNotAllowed)
+		return
+	}
+	if err := json.NewDecoder(r.Body).Decode(&url); err != nil {
+		http.Error(w, "Failed to decode request body",http.StatusBadRequest)
+		return
+	}
+	user, ok := r.Context().Value(middleware.UserKey).(models.User)
+	if !ok {
+		http.Error(w, "Context does not include user information.", http.StatusInternalServerError)
+		return
+	}
+	userid := fmt.Sprint(user.ID)
+	if err := controllers.UpatePfp(userid, url["newUrl"]); err != nil{
+		http.Error(w, "Error updating profile picture", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

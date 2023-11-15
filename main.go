@@ -31,7 +31,7 @@ func main() {
 	mux.Handle("/logout", logoutHandler)
 	mux.Handle("/delete", deleteHandler)
 	mux.Handle("/request", requestEmailHandler)
-	mux.Handle("/update/password", updatePassswordHandler)
+	mux.Handle("/password/update", updatePassswordHandler)
 	
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal(err)

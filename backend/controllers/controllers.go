@@ -72,6 +72,14 @@ func UpatePassword(userID string, newPassword string) error {
 	}
 	return nil
 }
+func UpatePfp(userID string, newURL string) error {
+	updatePfp := `UPDATE users SET pfpurl = $1 WHERE id = $2`
+	if _, err := database.DB.Exec(updatePfp, newURL, userID); err != nil {
+		log.Print(err)
+		return err
+	}
+	return nil
+}
 func FindByID(userID string) (models.User, error) {
 	findUser := "SELECT * FROM users WHERE id = $1"
 	rows, err := database.DB.Query(findUser, userID)
