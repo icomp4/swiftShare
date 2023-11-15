@@ -11,7 +11,9 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 )
+
 type contextKey string
+
 const UserKey contextKey = "user"
 
 func RequireAuth(next http.Handler) http.Handler {
