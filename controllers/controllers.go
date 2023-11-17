@@ -3,8 +3,8 @@ package controllers
 import (
 	"log"
 	"strings"
-	"swiftShare/backend/database"
-	"swiftShare/backend/models"
+	"swiftShare/database"
+	"swiftShare/models"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"

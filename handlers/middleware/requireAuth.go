@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"swiftShare/backend/controllers"
+	"swiftShare/controllers"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"

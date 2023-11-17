@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 	"net/http"
-	"swiftShare/backend/database"
-	"swiftShare/backend/handlers"
-	"swiftShare/backend/handlers/middleware"
+	"swiftShare/database"
+	"swiftShare/handlers"
+	"swiftShare/handlers/middleware"
 )
 
 func main() {
