@@ -21,28 +21,34 @@ func main() {
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 
-	templates := template.Must(template.ParseFiles("static/main.html"))
+
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// Render the HTML template
+		templates := template.Must(template.ParseFiles("static/main.html"))
 		if err := templates.ExecuteTemplate(w, "main.html", nil); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
+	mux.HandleFunc("/signup", func(w http.ResponseWriter, r *http.Request) {
+		templates := template.Must(template.ParseFiles("static/signup.html"))
+		if err := templates.ExecuteTemplate(w, "signup.html", nil); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
 
-	signupHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.SignUp)))
-	loginHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.SignIn)))
+	signupHandler := middleware.Logger(http.HandlerFunc(handlers.SignUp))
+	loginHandler := middleware.Logger(http.HandlerFunc(handlers.SignIn))
 	logoutHandler := middleware.Logger(http.HandlerFunc(handlers.LogOut))
 	deleteHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.DeleteAccount)))
 	requestEmailHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.RequestEmail)))
 	updatePassswordHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.UpatePassword)))
 
-	mux.Handle("/signup", signupHandler)
-	mux.Handle("/login", loginHandler)
-	mux.Handle("/logout", logoutHandler)
-	mux.Handle("/delete", deleteHandler)
-	mux.Handle("/request", requestEmailHandler)
-	mux.Handle("/password/update", updatePassswordHandler)
+	mux.Handle("/api/v1/signup", signupHandler)
+	mux.Handle("/api/v1/login", loginHandler)
+	mux.Handle("/api/v1/logout", logoutHandler)
+	mux.Handle("/api/v1/delete", deleteHandler)
+	mux.Handle("/api/v1/request", requestEmailHandler)
+	mux.Handle("/api/v1/password/update", updatePassswordHandler)
 
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal(err)
