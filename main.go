@@ -25,6 +25,7 @@ func main() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if validate := validators.ExtractToken(r); validate == nil{
 			http.Redirect(w,r, "/main", http.StatusSeeOther)
+			return
 		}
 		templates := template.Must(template.ParseFiles("static/login.html"))
 		if err := templates.ExecuteTemplate(w, "login.html", nil); err != nil {
