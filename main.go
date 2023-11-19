@@ -24,14 +24,20 @@ func main() {
 
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		templates := template.Must(template.ParseFiles("static/main.html"))
-		if err := templates.ExecuteTemplate(w, "main.html", nil); err != nil {
+		templates := template.Must(template.ParseFiles("static/login.html"))
+		if err := templates.ExecuteTemplate(w, "login.html", nil); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
 	mux.HandleFunc("/signup", func(w http.ResponseWriter, r *http.Request) {
 		templates := template.Must(template.ParseFiles("static/signup.html"))
 		if err := templates.ExecuteTemplate(w, "signup.html", nil); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+	mux.HandleFunc("/main", func(w http.ResponseWriter, r *http.Request) {
+		templates := template.Must(template.ParseFiles("static/main.html"))
+		if err := templates.ExecuteTemplate(w, "main.html", nil); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})

@@ -3,29 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://unpkg.com/htmx.org@1.9.6" integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni" crossorigin="anonymous"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <title>SwiftShare - Signup</title>
+    <title>SwiftShare - Login</title>
+    <style>
+        .bg-spin {
+            transition: transform 0.4s ease-in-out;
+        }
+        
+        .bg-spin:hover {
+            transform: rotateX(270deg);
+        }
+        
+        h1.logo {
+            margin-bottom: 0; 
+        }
+        .error-message {
+            color: #ff0000;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+    </style>
 </head>
-<style>
-    .bg-spin {
-        transition: transform 0.4s ease-in-out;
-    }
-
-    .bg-spin:hover {
-        transform: rotateX(270deg);
-    }
-
-    h1.logo {
-        margin-bottom: 0;
-    }
-
-    .error-message {
-        color: #ff0000;
-        font-size: 14px;
-        margin-top: 5px;
-    }
-</style>
 <body>
     <div class="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
         <h1 class="text-4xl font-bold text-center text-black mb-8">Swift<span class="font-light">Share</span></h1>
@@ -34,7 +32,7 @@
             <div class="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
                 <div class="max-w-md mx-auto">
                     <div>
-                        <h1 class="text-2xl font-semibold">Sign up to start uploading</h1>
+                        <h1 class="text-2xl font-semibold">Welcome back!</h1>
                     </div>
                     <div class="divide-y divide-gray-200">
                         <div class="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
@@ -43,18 +41,14 @@
                                 <label for="username" class="absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm">Username</label>
                             </div>
                             <div class="relative">
-                                <input autocomplete="off" id="email" name="email" type="email" class="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600" placeholder="Email" />
-                                <label for="email" class="absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm">Email</label>
-                            </div>
-                            <div class="relative">
                                 <input autocomplete="off" id="password" name="password" type="password" class="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-rose-600" placeholder="Password" />
                                 <label for="password" class="absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm">Password</label>
                             </div>
                             <div class="relative">
-                                <button id="signupBtn" class="bg-green-400 text-white rounded-md px-2 py-1 hover:bg-blue-400">Sign Up</button>
+                                <button id="loginBtn" class="bg-green-400 text-white rounded-md px-2 py-1 hover:bg-blue-400">Sign in</button>
                             </div>
                             <div class="relative">
-                                <label>Already have an account? <a class="text-blue-500" href="/login">Sign In</a></label>
+                                <label>Don't have an account? <a class="text-blue-500" href="/signup">Sign Up</a></label>
                             </div>
                             <div class="error-message" id="errorMessage"></div>
                         </div>
@@ -65,42 +59,33 @@
     </div>
 
     <script>
-        document.getElementById('signupBtn').addEventListener('click', function() {
-            const username = document.getElementById('username').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const pfpUrl = 'https://miro.medium.com/v2/resize:fit:720/1*W35QUSvGpcLuxPo3SRTH4w.png'; // Fixed URL
-            if (username === '' || email === '' || password === '') {
-                const errorMessage = document.getElementById('errorMessage');
-                errorMessage.textContent = 'Please fill in all fields.';
-                return;
-            }
-            fetch('/api/v1/signup', {
-                method: 'POST',
+        document.getElementById("loginBtn").addEventListener("click", function() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const url = "/api/v1/login";
+            fetch(url, {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                     Username: username,
-                    Email: email,
-                    Password: password,
-                    Pfpurl: pfpUrl
+                    Password: password
                 })
             })
             .then(response => {
-                if (response.ok) {
-                    window.location.href = '/login'; 
-                } else {
+                if (!response.ok) {
                     return response.text().then(errorMessage => {
-                        const errorDiv = document.getElementById('errorMessage');
-                        errorDiv.textContent = errorMessage;
+                        throw new Error(errorMessage);
                     });
+                } else {
+                    window.location.href = "/main";
                 }
             })
             .catch(error => {
-                const errorMessage = document.getElementById('errorMessage');
-                errorMessage.textContent = 'Error signing up: ' + error.message;
-                console.error('There was a problem with the fetch operation:', error);
+                const errorMessage = document.getElementById("errorMessage");
+                errorMessage.textContent = error.message;
+                console.error("There was a problem with the fetch operation:", error);
             });
         });
     </script>

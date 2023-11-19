@@ -85,14 +85,8 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 	})
-	resp := messages.BasicSuccessMessage{
-		Status:  "Sucess",
-		Message: "User " + user.Username + " has successfully logged in.",
-	}
-	json, _ := json.Marshal(resp)
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(json)
+	io.WriteString(w, "user " + user.Username + " has successfully logged in.")
 }
 func LogOut(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
