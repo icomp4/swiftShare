@@ -1,6 +1,12 @@
 package validators
 
-import "unicode"
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"unicode"
+	"github.com/golang-jwt/jwt/v5"
+)
 
 func PasswordIsValid(password string) bool {
 	if len(password) < 6 {
@@ -23,7 +29,6 @@ func PasswordIsValid(password string) bool {
 	return hasUpper && hasLower && hasDigit && hasSpecial
 }
 
-
 func isSpecial(char rune) bool {
 	specialCharacters := "!@#$%^&*()_+{}[]|:;<>,.?/~"
 	for _, special := range specialCharacters {
@@ -32,4 +37,25 @@ func isSpecial(char rune) bool {
 		}
 	}
 	return false
+}
+
+func ExtractToken(r *http.Request) error {
+	tokenCookie, err := r.Cookie("jwt")
+	if err != nil {
+		return err
+	}
+	token, err := jwt.Parse(tokenCookie.Value, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(os.Getenv("SECRET_KEY")), nil
+	})
+	if err != nil {
+		return err
+	}
+	if !token.Valid {
+		return err
+	}
+	return nil
 }

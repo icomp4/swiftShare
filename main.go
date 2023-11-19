@@ -7,6 +7,7 @@ import (
 	"swiftShare/database"
 	"swiftShare/handlers"
 	"swiftShare/handlers/middleware"
+	"swiftShare/handlers/validators"
 )
 
 func main() {
@@ -21,9 +22,10 @@ func main() {
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 
-
-
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if validate := validators.ExtractToken(r); validate == nil{
+			http.Redirect(w,r, "/main", http.StatusSeeOther)
+		}
 		templates := template.Must(template.ParseFiles("static/login.html"))
 		if err := templates.ExecuteTemplate(w, "login.html", nil); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
