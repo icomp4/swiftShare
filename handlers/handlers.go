@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"swiftShare/controllers"
-	"swiftShare/handlers/messages"
 	"swiftShare/handlers/middleware"
 	"swiftShare/handlers/validators"
 	"swiftShare/models"
@@ -16,7 +15,24 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 )
+
 var AuthCodeStore = make(map[string]utils.AuthCode)
+
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed.", http.StatusMethodNotAllowed)
+		return
+	}
+	user, ok := r.Context().Value(middleware.UserKey).(models.User)
+	if !ok {
+		http.Error(w, "Context does not include user information.", http.StatusInternalServerError)
+		return
+	}
+	user.Password = "Hidden"
+	userJson, _ := json.Marshal(user)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(userJson)
+}
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	var user models.User
@@ -44,13 +60,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Email or username already in use.", http.StatusMethodNotAllowed)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	resp := messages.BasicSuccessMessage{
-		Status:  "Success",
-		Message: "User " + user.Username + " has succsessfully signed up.",
-	}
-	json, _ := json.Marshal(resp)
-	w.Write(json)
+	io.WriteString(w, user.Username + " has successfully signed up")
 }
 func SignIn(w http.ResponseWriter, r *http.Request) {
 	var user models.User
@@ -61,7 +71,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Failed to decode request body",http.StatusBadRequest)
+		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
 	if userID, err = controllers.SignIn(user); err != nil {
@@ -86,7 +96,7 @@ func SignIn(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 	})
 	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, "user " + user.Username + " has successfully logged in.")
+	io.WriteString(w, "user "+user.Username+" has successfully logged in.")
 }
 func LogOut(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
@@ -118,7 +128,7 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not delete account", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("UserID: ",userid)
+	fmt.Println("UserID: ", userid)
 	http.SetCookie(w, &http.Cookie{
 		Name:     "jwt",
 		Value:    "",
@@ -129,7 +139,7 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "You have successfully deleted your account and will now be logged out.")
 }
-func RequestEmail(w http.ResponseWriter, r *http.Request){
+func RequestEmail(w http.ResponseWriter, r *http.Request) {
 	var AuthCode utils.AuthCode
 	var err error
 	if r.Method != "GET" {
@@ -142,7 +152,7 @@ func RequestEmail(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	userid := fmt.Sprint(user.ID)
-	if AuthCode, err = utils.SendConformationLink(userid, user.Email); err != nil{
+	if AuthCode, err = utils.SendConformationLink(userid, user.Email); err != nil {
 		http.Error(w, "Could not send conformation email.", http.StatusInternalServerError)
 		return
 	}
@@ -150,14 +160,14 @@ func RequestEmail(w http.ResponseWriter, r *http.Request){
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "Please check email for conformation code.")
 }
-func UpatePassword(w http.ResponseWriter, r *http.Request){
+func UpatePassword(w http.ResponseWriter, r *http.Request) {
 	var userInfo utils.UpdatePasswordStruct
 	if r.Method != "PATCH" {
 		http.Error(w, "Method not allowed.", http.StatusMethodNotAllowed)
 		return
 	}
 	if err := json.NewDecoder(r.Body).Decode(&userInfo); err != nil {
-		http.Error(w, "Failed to decode request body",http.StatusBadRequest)
+		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
 	user, ok := r.Context().Value(middleware.UserKey).(models.User)
@@ -167,29 +177,29 @@ func UpatePassword(w http.ResponseWriter, r *http.Request){
 	}
 	userid := fmt.Sprint(user.ID)
 	authCode, ok := AuthCodeStore[userid]
-	if !ok{
+	if !ok {
 		http.Error(w, "Could not get authentication code, try generating a new one.", http.StatusInternalServerError)
 		return
 	}
-	if err := utils.VerifyEmailCode(userInfo.Code, userid, &authCode); !err{
+	if err := utils.VerifyEmailCode(userInfo.Code, userid, &authCode); !err {
 		http.Error(w, "Error verifying auth code.", http.StatusBadRequest)
 		return
 	}
-	if err := controllers.UpatePassword(userid, userInfo.NewPassword); err != nil{
+	if err := controllers.UpatePassword(userid, userInfo.NewPassword); err != nil {
 		http.Error(w, "Error updating password", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "You have successfully updated your password")
 }
-func UpatePfp(w http.ResponseWriter, r *http.Request){
+func UpatePfp(w http.ResponseWriter, r *http.Request) {
 	var url map[string]string
 	if r.Method != "PATCH" {
 		http.Error(w, "Method not allowed.", http.StatusMethodNotAllowed)
 		return
 	}
 	if err := json.NewDecoder(r.Body).Decode(&url); err != nil {
-		http.Error(w, "Failed to decode request body",http.StatusBadRequest)
+		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
 	user, ok := r.Context().Value(middleware.UserKey).(models.User)
@@ -198,7 +208,7 @@ func UpatePfp(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	userid := fmt.Sprint(user.ID)
-	if err := controllers.UpatePfp(userid, url["newUrl"]); err != nil{
+	if err := controllers.UpatePfp(userid, url["newUrl"]); err != nil {
 		http.Error(w, "Error updating profile picture", http.StatusInternalServerError)
 		return
 	}

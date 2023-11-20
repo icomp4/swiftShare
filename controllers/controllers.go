@@ -103,7 +103,7 @@ func FindByID(userID string) (models.User, error) {
 	defer rows.Close()
 	user := models.User{
 		ID:        uint(id),
-		Username:  userID,
+		Username:  username,
 		Email:     email,
 		Password:  password,
 		PfpUrl:    pfpurl,

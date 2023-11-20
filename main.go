@@ -51,6 +51,7 @@ func main() {
 	deleteHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.DeleteAccount)))
 	requestEmailHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.RequestEmail)))
 	updatePassswordHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.UpatePassword)))
+	getUserHandler := middleware.RequireAuth(middleware.Logger(http.HandlerFunc(handlers.GetUser)))
 
 	mux.Handle("/api/v1/signup", signupHandler)
 	mux.Handle("/api/v1/login", loginHandler)
@@ -58,6 +59,7 @@ func main() {
 	mux.Handle("/api/v1/delete", deleteHandler)
 	mux.Handle("/api/v1/request", requestEmailHandler)
 	mux.Handle("/api/v1/password/update", updatePassswordHandler)
+	mux.Handle("/api/v1/user", getUserHandler)
 
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal(err)
