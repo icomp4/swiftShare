@@ -5,7 +5,12 @@
     User Authentication: Users can sign up, log in, and automatically log in on subsequent visits using JWT sessions.
     File Management: Access the main page for file sharing and management.
     Session Management: JWT manages user sessions securely.
-    Email Authentication: Users can request an email code to peform changes such as updating their password, or deleting their account. 
+    Email Authentication: Users can request an email code to perform changes such as updating their password, or deleting their account. 
+
+****Examples****
+
+ ![Demo](https://i.gyazo.com/117c0d1f536ccbd0206669426bec281e.gif)
+
 
 ****Tech Stack****
 
@@ -36,7 +41,3 @@
     static/: Contains static files for the frontend.
     utils/: Various utilities for smoother development.
     
-
-Contributing
-
-Feel free to contribute by submitting bug reports, feature requests, or pull requests. Make sure to follow the contribution guidelines.
