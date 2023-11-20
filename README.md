@@ -9,9 +9,13 @@
 
 ****Tech Stack****
 
-    Backend: Implemented in Go, using standard libraries for handling HTTP requests and database management.
-    Frontend: Developed using HTML templates and styled with Tailwind CSS.
-
+    https://github.com/golang/go
+    https://en.wikipedia.org/wiki/HTML5
+    https://github.com/golang-jwt/jwt
+    github.com/joho/godotenv
+    github.com/lib/pq
+    https://www.postgresql.org/
+    
 ****API Endpoints****
 
     POST /api/v1/signup: Create a new user account.
@@ -27,7 +31,8 @@
     controllers/: Handles database queries for an added layer of abstraction in /handlers.
     database/: Database-related functionalities.
     handlers/: Backend handlers for different endpoints.
-    middleware/: Middleware functions for Auth, Logging, and Email functionality
+    handlers/middleware/: Middleware functions for Auth, Logging, and Email functionality.
+    handlers/validators/: Various validation such as password requirements and extracting JWT tokens.
     static/: Contains static files for the frontend.
     utils/: Various utilities for smoother development.
     
