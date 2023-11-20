@@ -9,13 +9,13 @@
 
 ****Tech Stack****
 
-    https://github.com/golang/go
-    https://en.wikipedia.org/wiki/HTML5
-    https://github.com/golang-jwt/jwt
-    github.com/joho/godotenv
-    github.com/lib/pq
-    https://www.postgresql.org/
-    
+- [Golang Repository](https://github.com/golang/go)
+- [HTML5 Wikipedia](https://en.wikipedia.org/wiki/HTML5)
+- [Golang JWT Library](https://github.com/golang-jwt/jwt)
+- [godotenv on GitHub](https://github.com/joho/godotenv)
+- [pq on GitHub](https://github.com/lib/pq)
+- [PostgreSQL Official Site](https://www.postgresql.org/)
+
 ****API Endpoints****
 
     POST /api/v1/signup: Create a new user account.
